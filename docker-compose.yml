@@ -1,0 +1,44 @@
+# api.optics
+
+server:
+    restart: always
+    build: ./docker/server
+    volumes_from:
+        - data
+    volumes:
+        - "./static:/usr/share/nginx/static"
+    ports:
+        - "80:80"
+    links:
+        - "app:app"
+
+app:
+    build: ./docker/app
+    ports:
+        - "27615:27615"
+    environment:
+        APP_PORT: 27615
+        NODE_ENV: "development"
+    volumes:
+        - ".:/src/app"
+    volumes_from:
+        - data
+    command: supervisor -w bin -e js,jade -i docker,node_modules,src,static bin/server.js
+    links:
+        - "database:postgres"
+
+database:
+    build: ./docker/database
+    environment:
+        POSTGRES_USER: optics
+        POSTGRES_PASSWORD: optics
+        PGPASSWORD: optics
+    expose:
+        - "5432"
+    ports:
+        - "5433:5432"
+    volumes_from:
+        - data
+
+data:
+    build: ./docker/data

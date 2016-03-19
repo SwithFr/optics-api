@@ -29,7 +29,7 @@ exports.json = _json = {
         console.log( "ERROR : [" + iStatusCode + "] - ", oError );
         oResponse.status( iStatusCode || 500 ).json( {
             "url": "[" + oRequest.method + "] - " + oRequest.url,
-            "error": oError.message || oError,
+            "error":  oError.errors[ 0 ].message || oError.message || oError,
             "data": null
         } );
     }

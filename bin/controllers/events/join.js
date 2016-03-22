@@ -43,7 +43,7 @@ module.exports = function( oRequest, oResponse ) {
 };
 
 var checkParams = function( param ) {
-    if ( !iEventID ) {
+    if ( !param ) {
         jsonMiddlewares.error( oRequest, oResponse, new Error( "NO_EMPTY_PARAM" ), 500 );
         return;
     }

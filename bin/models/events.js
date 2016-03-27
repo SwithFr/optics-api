@@ -24,6 +24,10 @@ module.exports = function( oSequelize, DataTypes ) {
         "users_count": {
             "type": DataTypes.INTEGER,
             "defaultValue": 1
+        },
+        "pictures_count": {
+            "type": DataTypes.INTEGER,
+            "defaultValue": 0
         }
     };
 

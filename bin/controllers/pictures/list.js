@@ -40,11 +40,11 @@ module.exports = function( oRequest, oResponse ) {
                     "avatar": oPicture[ "User" ].avatar,
                     "user_id": oPicture[ "User" ].id,
                     "date": oPicture.created_at,
-                    "comments": oPicture.commentsCount,
+                    "comments": oPicture.comments_count,
                     "image": oPicture.data,
                     "event_id": oRequest.headers.eventid
                 }
             } ) );
         } );
-        
+
 };

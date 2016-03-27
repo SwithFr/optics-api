@@ -8,7 +8,40 @@
 var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
     fs = require( "fs" ),
     Picture = require( "../../core/sequelize.js" ).models.Picture,
+    Event = require( "../../core/sequelize.js" ).models.Event,
     zouti = require( "zouti" );
+
+var incrementePicturesCount = function( oSavedPicture, oRequest, oResponse ) {
+    Event
+       .findOne( {
+           "where": {
+               "id": oSavedPicture.event_id
+           }
+       } )
+       .catch( function( oError ) {
+           return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+       } )
+       .then( function( oEvent ) {
+           oEvent.incrementPicturesCount();
+           oEvent.save();
+
+           jsonMiddlewares.send( oRequest, oResponse, {
+               "title": oRequest.files.file.name,
+               "uuid": oSavedPicture.uuid,
+               "event_id": oSavedPicture.event_id
+           } );
+       } );
+};
+
+var savePicture = function( oPicture, oRequest, oResponse ) {
+    oPicture.save()
+        .catch( function( oError ) {
+            return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+        } )
+        .then( function( oSavedPicture ) {
+            oSavedPicture && incrementePicturesCount( oSavedPicture, oRequest, oResponse );
+        } );
+};
 
 // [POST] - /pictures
 module.exports = function( oRequest, oResponse ) {
@@ -16,10 +49,10 @@ module.exports = function( oRequest, oResponse ) {
     var oPicture = Picture.build(),
         title = zouti.whirlpool( oRequest.headers.id + new Date() ).substring( 0, 8 ) + ".jpg";
 
-    fs.readFile( oRequest.files.file.path, "base64", function ( oError, oData ) {
+    fs.readFile( oRequest.files.file.path, "base64", function( oError, oData ) {
         var newPath = "./static/" + title;
 
-        fs.writeFile( newPath, oData, function ( oError ) {
+        fs.writeFile( newPath, oData, function( oError ) {
             if( oError ) {
                 return jsonMiddlewares.error( oRequest, oResponse, oError );
             }
@@ -28,17 +61,8 @@ module.exports = function( oRequest, oResponse ) {
             oPicture.title = title;
             oPicture.user_id = oRequest.headers.userid;
             oPicture.data = oData;
-            oPicture.save()
-                .catch( function( oError ) {
-                    return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-                } )
-                .then( function( oSavedPicture ) {
-                    oSavedPicture && jsonMiddlewares.send( oRequest, oResponse, {
-                        "title": oRequest.files.file.name,
-                        "uuid": oSavedPicture.uuid,
-                        "event_id": oSavedPicture.event_id,
-                    } );
-                } );
+
+            savePicture( oPicture, oRequest, oResponse );
         } );
     } );
 

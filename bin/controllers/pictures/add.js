@@ -60,7 +60,6 @@ module.exports = function( oRequest, oResponse ) {
             oPicture.event_id = oRequest.body.eventId;
             oPicture.title = title;
             oPicture.user_id = oRequest.headers.userid;
-            oPicture.data = oData;
 
             savePicture( oPicture, oRequest, oResponse );
         } );

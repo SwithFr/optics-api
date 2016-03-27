@@ -18,7 +18,7 @@ module.exports = function( oSequelize, DataTypes ) {
             "type": DataTypes.JSON,
             "allowNull": false
         },
-        "commentsCount": {
+        "comments_count": {
             "type": DataTypes.INTEGER,
             "defaultValue": 0
         }
@@ -27,7 +27,12 @@ module.exports = function( oSequelize, DataTypes ) {
     oProperties = {
         "tablename": "pictures",
         "paranoid": true,
-        "underscored": true
+        "underscored": true,
+        "instanceMethods": {
+            "incrementCommentsCount": function() {
+                return this.comments_count = this.comments_count + 1;
+            }
+        }
     };
 
     return oSequelize.define( "Picture", oColumns, oProperties );

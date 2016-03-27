@@ -11,6 +11,43 @@
      Picture = require( "../../core/sequelize.js" ).models.Picture,
      zouti = require( "zouti" );
 
+ var incrementeCommentsCount = function( iPictureId, oSavedComment, oRequest, oResponse ){
+     Picture
+        .findOne( {
+            "where": {
+                "id": iPictureId
+            }
+        } )
+        .catch( function( oError ) {
+            return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+        } )
+        .then( function( oPicture ) {
+            oPicture.incrementCommentsCount();
+            oPicture.save();
+
+            oSavedComment && jsonMiddlewares.send( oRequest, oResponse, {
+                "id": oSavedComment.id,
+                "comment": oSavedComment.content
+            } );
+        } );
+ };
+
+var saveComment = function( oComment, oCommentPosted, iPictureId, oRequest, oResponse ){
+    oComment.user_id = +oRequest.headers.userid;
+    oComment.picture_id = iPictureId;
+    oComment.content = oCommentPosted;
+    oComment.event_id = oRequest.headers.eventid;
+
+    oComment.save()
+      .catch( function( oError ) {
+          jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+          return;
+      } )
+      .then( function( oSavedComment ) {
+          incrementeCommentsCount( iPictureId, oSavedComment, oRequest, oResponse );
+      } );
+};
+
  // [POST] - /comments
  module.exports = function( oRequest, oResponse ) {
 
@@ -33,41 +70,4 @@
              saveComment( oComment, oCommentPosted, iPictureId, oRequest, oResponse );
 
          } );
- };
-
- var saveComment = function( oComment, oCommentPosted, iPictureId, oRequest, oResponse ){
-     oComment.user_id = +oRequest.headers.userid;
-     oComment.picture_id = iPictureId;
-     oComment.content = oCommentPosted;
-     oComment.event_id = oRequest.headers.eventid;
-
-     oComment.save()
-         .catch( function( oError ) {
-             jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-             return;
-         } )
-         .then( function( oSavedComment ) {
-             incrementeCommentsCount( iPictureId, oSavedComment, oRequest, oResponse );
-         } );
- };
-
- var incrementeCommentsCount = function( iPictureId, oSavedComment, oRequest, oResponse ){
-     Picture
-        .findOne( {
-            "where": {
-                "id": iPictureId
-            }
-        } )
-        .catch( function( oError ) {
-            return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-        } )
-        .then( function( oPicture ) {
-            oPicture.commentsCount += 1;
-            oPicture.save();
-
-            oSavedComment && jsonMiddlewares.send( oRequest, oResponse, {
-                "id": oSavedComment.id,
-                "comment": oSavedComment.content
-            } );
-        } );
  };

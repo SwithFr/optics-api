@@ -34,7 +34,15 @@ module.exports = function( oSequelize, DataTypes ) {
     oProperties = {
         "tablename": "events",
         "paranoid": true,
-        "underscored": true
+        "underscored": true,
+        "instanceMethods": {
+            "incrementPicturesCount": function() {
+                return this.pictures_count = this.pictures_count + 1;
+            },
+            "incrementUsersCount": function() {
+                return this.users_count = this.users_count + 1;
+            }
+        }
     };
 
     return oSequelize.define( "Event", oColumns, oProperties );

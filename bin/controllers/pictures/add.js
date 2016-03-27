@@ -22,7 +22,7 @@ var incrementePicturesCount = function( oSavedPicture, oRequest, oResponse ) {
            return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
        } )
        .then( function( oEvent ) {
-           oEvent.picturesCount += 1;
+           oEvent.incrementPicturesCount();
            oEvent.save();
 
            jsonMiddlewares.send( oRequest, oResponse, {

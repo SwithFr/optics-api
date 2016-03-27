@@ -39,6 +39,9 @@ module.exports = function( oSequelize, DataTypes ) {
             "incrementPicturesCount": function() {
                 return this.pictures_count = this.pictures_count + 1;
             },
+            "decrementPicturesCount": function() {
+                return this.pictures_count = this.pictures_count - 1;
+            },
             "incrementUsersCount": function() {
                 return this.users_count = this.users_count + 1;
             }

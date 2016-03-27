@@ -52,7 +52,7 @@ module.exports = function( oRequest, oResponse ) {
     fs.readFile( oRequest.files.file.path, "base64", function( oError, oData ) {
         var newPath = "./static/" + title;
 
-        fs.writeFile( newPath, oData, function( oError ) {
+        fs.writeFile( newPath, oData, "base64", function( oError ) {
             if( oError ) {
                 return jsonMiddlewares.error( oRequest, oResponse, oError );
             }

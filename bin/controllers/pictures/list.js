@@ -41,7 +41,6 @@ module.exports = function( oRequest, oResponse ) {
                     "user_id": oPicture[ "User" ].id,
                     "date": oPicture.created_at,
                     "comments": oPicture.comments_count,
-                    "image": oPicture.data,
                     "event_id": oRequest.headers.eventid
                 }
             } ) );

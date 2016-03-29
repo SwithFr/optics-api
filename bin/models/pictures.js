@@ -14,10 +14,6 @@ module.exports = function( oSequelize, DataTypes ) {
             "type": DataTypes.STRING,
             "allowNull": false
         },
-        "data": {
-            "type": DataTypes.JSON,
-            "allowNull": false
-        },
         "comments_count": {
             "type": DataTypes.INTEGER,
             "defaultValue": 0

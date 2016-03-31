@@ -9,22 +9,6 @@ var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
     Event = require( "../../core/sequelize.js" ).models.Event,
     EventUser = require( "../../core/sequelize.js" ).models.EventUser;
 
-var checkIfRelationExist = function( iEventID, iUserID ) {
-    EventUser
-        .findOne( {
-            "where": {
-                "event_id": iEventID,
-                "user_id": iUserID
-            }
-        } )
-        .then( function( oEventUserFound ) {
-            if ( oEventUserFound ) {
-                return true;
-            }
-            return false;
-        } );
-};
-
 var checkParams = function( param ) {
     if ( !param ) {
         jsonMiddlewares.error( oRequest, oResponse, new Error( "NO_EMPTY_PARAM" ), 500 );

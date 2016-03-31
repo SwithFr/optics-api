@@ -18,6 +18,9 @@ exports.init = function( oApp ) {
     // list all users
     oApp.get( "/users", fCheckConnect, require( "../controllers/users/list.js" ) );
 
+    // update user settings
+    oApp.patch( "/users/:id", fCheckConnect, require( "../controllers/users/update.js" ) );
+
     // get settings from user
     oApp.get( "/users/settings", fCheckConnect, require( "../controllers/users/settings.js" ) );
 

@@ -18,6 +18,9 @@ exports.init = function( oApp ) {
     // join event
     oApp.get( "/events/join/:id", fCheckConnect, require( "../controllers/events/join.js" ) );
 
+    // update an event
+    oApp.patch( "/events/:id", fCheckConnect, require( "../controllers/events/update.js" ) );
+
     // Delete event
     oApp.delete( "/events/:id", fCheckConnect, require( "../controllers/events/delete.js" ) );
 

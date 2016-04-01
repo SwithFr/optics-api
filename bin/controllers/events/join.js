@@ -9,6 +9,24 @@ var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
     Event = require( "../../core/sequelize.js" ).models.Event,
     EventUser = require( "../../core/sequelize.js" ).models.EventUser;
 
+var checkParams = function( param ) {
+    if ( !param ) {
+        jsonMiddlewares.error( oRequest, oResponse, new Error( "NO_EMPTY_PARAM" ), 500 );
+        return;
+    }
+};
+
+var setEventUserRelation = function( oEventUser, iEventID, iUserID ) {
+    oEventUser.event_id = iEventID;
+    oEventUser.user_id = iUserID;
+    return oEventUser;
+};
+
+var incrementUsersCount = function( oEvent ) {
+    oEvent.users_count += 1;
+    oEvent.save();
+};
+
 // [GET] - /events/join/{id}
 module.exports = function( oRequest, oResponse ) {
 
@@ -29,33 +47,30 @@ module.exports = function( oRequest, oResponse ) {
             return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
         } )
         .then( function( oEvent ) {
-            incrementUsersCount( oEvent );
 
-            setEventUserRelation( oEventUser, oEvent.id, iUserID )
-                .save()
-                    .catch( function( oError ) {
-                        return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-                    } )
-                    .then( function( oSavedEventUser ) {
-                        oSavedEventUser && jsonMiddlewares.send( oRequest, oResponse, oEvent );
-                    } );
+            EventUser
+                .findOne( {
+                    "where": {
+                        "event_id": oEvent.id,
+                        "user_id": iUserID
+                    }
+                } )
+                .then( function( oEventUserFound ) {
+                    if ( oEventUserFound ) {
+                        return jsonMiddlewares.error( oRequest, oResponse, "ALREADY_JOINED", 401 );
+                    }
+
+                    incrementUsersCount( oEvent );
+
+                    setEventUserRelation( oEventUser, oEvent.id, iUserID )
+                        .save()
+                        .catch( function( oError ) {
+                            return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+                        } )
+                        .then( function( oSavedEventUser ) {
+                            oSavedEventUser && jsonMiddlewares.send( oRequest, oResponse, oEvent );
+                            return;
+                        } );
+                } );
         } );
-};
-
-var checkParams = function( param ) {
-    if ( !param ) {
-        jsonMiddlewares.error( oRequest, oResponse, new Error( "NO_EMPTY_PARAM" ), 500 );
-        return;
-    }
-};
-
-var setEventUserRelation = function( oEventUser, iEventID, iUserID ) {
-    oEventUser.event_id = iEventID;
-    oEventUser.user_id = iUserID;
-    return oEventUser;
-};
-
-var incrementUsersCount = function( oEvent ) {
-    oEvent.users_count += 1;
-    oEvent.save();
 };

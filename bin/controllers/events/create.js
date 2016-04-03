@@ -9,6 +9,26 @@ var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
     Event = require( "../../core/sequelize.js" ).models.Event,
     EventUser = require( "../../core/sequelize.js" ).models.EventUser;
 
+var setEventUserRelation = function( oEventUser, iUserId, iEventId ){
+    oEventUser.user_id = iUserId;
+    oEventUser.event_id = iEventId;
+
+    return oEventUser;
+};
+
+var setEvent = function( oEvent, iUserId ){
+    oEvent.uuid = generateFakeUuid();
+    oEvent.user_id = iUserId;
+
+    return oEvent;
+};
+
+var generateFakeUuid = function() {
+    return require( "zouti" )
+              .whirlpool( ( new Date() ).toString() )
+              .substring( 0, 8 )
+};
+
 // [POST] - /events/create
 module.exports = function( oRequest, oResponse ) {
 
@@ -18,8 +38,16 @@ module.exports = function( oRequest, oResponse ) {
 
     var iUserId = +oRequest.headers.userid;
 
+    if ( !iUserId ) {
+        return jsonMiddlewares.error( oRequest, oResponse, "INVALID_HEADERS", 400 );
+    }
+
     oEvent.title = ( oPOST.title || "" ).trim();
     oEvent.description = ( oPOST.description || "" ).trim();
+
+    if ( !oEvent.title || !oEvent.description ) {
+        return jsonMiddlewares.error( oRequest, oResponse, "EMPTY_DATA", 400 );
+    }
 
     oEvent
         .validate()
@@ -50,22 +78,4 @@ module.exports = function( oRequest, oResponse ) {
                             } );
                 } );
         } );
-};
-
-var setEventUserRelation = function( oEventUser, iUserId, iEventId ){
-    oEventUser.user_id = iUserId;
-    oEventUser.event_id = iEventId;
-    return oEventUser;
-};
-
-var setEvent = function( oEvent, iUserId ){
-    oEvent.uuid = generateFakeUuid();
-    oEvent.user_id = iUserId;
-    return oEvent;
-};
-
-var generateFakeUuid = function() {
-    return require( "zouti" )
-              .whirlpool( ( new Date() ).toString() )
-              .substring( 0, 8 )
 };

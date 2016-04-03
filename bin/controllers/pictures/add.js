@@ -9,7 +9,8 @@ var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
     fs = require( "fs" ),
     Picture = require( "../../core/sequelize.js" ).models.Picture,
     Event = require( "../../core/sequelize.js" ).models.Event,
-    zouti = require( "zouti" );
+    zouti = require( "zouti" ),
+    Validator = require( "../../core/validator.js" );
 
 var incrementePicturesCount = function( oSavedPicture, oRequest, oResponse ) {
     Event
@@ -26,7 +27,7 @@ var incrementePicturesCount = function( oSavedPicture, oRequest, oResponse ) {
            oEvent.save();
 
            jsonMiddlewares.send( oRequest, oResponse, {
-               "title": oRequest.files.file.name,
+               "title": oSavedPicture.title,
                "uuid": oSavedPicture.uuid,
                "event_id": oSavedPicture.event_id
            } );
@@ -45,24 +46,34 @@ var savePicture = function( oPicture, oRequest, oResponse ) {
 
 // [POST] - /pictures
 module.exports = function( oRequest, oResponse ) {
+    var oIsNotValid = Validator( [
+        {
+            "type": "data",
+            "message": "Id de l'évènement manquant",
+            "data": oRequest.body.eventId
+        }
+    ], oRequest, oResponse );
 
-    var oPicture = Picture.build(),
-        title = zouti.whirlpool( oRequest.headers.id + new Date() ).substring( 0, 8 ) + ".jpg";
+    if ( oIsNotValid ) {
+        return jsonMiddlewares.error( oRequest, oResponse, oIsNotValid, 400 );
+    } else {
+        var oPicture = Picture.build(),
+            title = zouti.whirlpool( oRequest.body.eventId + new Date() ).substring( 0, 8 ) + ".jpg";
 
-    fs.readFile( oRequest.files.file.path, "base64", function( oError, oData ) {
-        var newPath = "./static/" + title;
+        fs.readFile( oRequest.files.file.path, "base64", function( oError, oData ) {
+            var newPath = "./static/" + title;
 
-        fs.writeFile( newPath, oData, "base64", function( oError ) {
-            if( oError ) {
-                return jsonMiddlewares.error( oRequest, oResponse, oError );
-            }
+            fs.writeFile( newPath, oData, "base64", function( oError ) {
+                if( oError ) {
+                    return jsonMiddlewares.error( oRequest, oResponse, oError );
+                }
 
-            oPicture.event_id = oRequest.body.eventId;
-            oPicture.title = title;
-            oPicture.user_id = oRequest.headers.userid;
+                oPicture.event_id = oRequest.body.eventId;
+                oPicture.title = title;
+                oPicture.user_id = oRequest.headers.userid;
 
-            savePicture( oPicture, oRequest, oResponse );
+                savePicture( oPicture, oRequest, oResponse );
+            } );
         } );
-    } );
-
+    }
 };

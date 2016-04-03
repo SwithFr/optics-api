@@ -13,6 +13,10 @@ module.exports = function( oRequest, oResponse ) {
 
     var sEventID = oRequest.params.id;
 
+    if ( !sEventID ) {
+        return jsonMiddlewares.error( oRequest, oResponse, "EMPTY_PARAMS", 400 );
+    }
+
     Event
         .findOne( {
             "where": {

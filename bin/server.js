@@ -5,6 +5,7 @@
 
 "use strict";
 
+var colors = require( "ansi-256-colors" );
 var zouti = require( "zouti" );
 
 zouti.clearConsole();

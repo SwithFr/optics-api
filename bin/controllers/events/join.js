@@ -11,7 +11,7 @@ var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
 
 var checkParams = function( param ) {
     if ( !param ) {
-        jsonMiddlewares.error( oRequest, oResponse, new Error( "NO_EMPTY_PARAM" ), 500 );
+        jsonMiddlewares.error( oRequest, oResponse, new Error( "EMPTY_PARAM" ), 500 );
         return;
     }
 };
@@ -19,6 +19,7 @@ var checkParams = function( param ) {
 var setEventUserRelation = function( oEventUser, iEventID, iUserID ) {
     oEventUser.event_id = iEventID;
     oEventUser.user_id = iUserID;
+    
     return oEventUser;
 };
 

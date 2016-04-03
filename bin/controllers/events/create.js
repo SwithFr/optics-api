@@ -7,7 +7,8 @@
 
 var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
     Event = require( "../../core/sequelize.js" ).models.Event,
-    EventUser = require( "../../core/sequelize.js" ).models.EventUser;
+    EventUser = require( "../../core/sequelize.js" ).models.EventUser,
+    Validator = require( "../../core/validator.js" );
 
 var setEventUserRelation = function( oEventUser, iUserId, iEventId ){
     oEventUser.user_id = iUserId;
@@ -38,44 +39,53 @@ module.exports = function( oRequest, oResponse ) {
 
     var iUserId = +oRequest.headers.userid;
 
-    if ( !iUserId ) {
-        return jsonMiddlewares.error( oRequest, oResponse, "INVALID_HEADERS", 400 );
-    }
+    var oIsNotValid = Validator( [
+        {
+            "type": "data",
+            "message": "Titre l'évènement manquant",
+            "data": oPOST.title.trim()
+        },
+        {
+            "type": "data",
+            "message": "Description l'évènement manquant",
+            "data": oPOST.description.trim()
+        }
+    ], oRequest, oResponse );
 
-    oEvent.title = ( oPOST.title || "" ).trim();
-    oEvent.description = ( oPOST.description || "" ).trim();
+    if ( oIsNotValid ) {
+        return jsonMiddlewares.error( oRequest, oResponse, oIsNotValid, 400 );
+    } else {
+        oEvent.title = oPOST.title;
+        oEvent.description = oPOST.description;
 
-    if ( !oEvent.title || !oEvent.description ) {
-        return jsonMiddlewares.error( oRequest, oResponse, "EMPTY_DATA", 400 );
-    }
+        oEvent
+            .validate()
+            .then( function( oValidationReport ) {
+                if( oValidationReport ) {
+                    return jsonMiddlewares.error( oRequest, oResponse, oValidationReport.errors, 400 );
+                }
 
-    oEvent
-        .validate()
-        .then( function( oValidationReport ) {
-            if( oValidationReport ) {
-                return jsonMiddlewares.error( oRequest, oResponse, oValidationReport.errors, 400 );
-            }
-
-            setEvent( oEvent, iUserId )
-                .save()
-                .catch( function( oError ) {
-                    return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-                } )
-                .then( function( oSavedEvent ) {
-                    setEventUserRelation( oEventUser, iUserId, oSavedEvent.id )
-                        .save()
-                            .catch( function( oError ) {
-                                return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-                            } )
-                            .then( function() {
-                                oSavedEvent && jsonMiddlewares.send( oRequest, oResponse, {
-                                    "id": oSavedEvent.id,
-                                    "title": oSavedEvent.title,
-                                    "uuid": oSavedEvent.uuid,
-                                    "user_id": oSavedEvent.user_id,
-                                    "description": oSavedEvent.description
+                setEvent( oEvent, iUserId )
+                    .save()
+                    .catch( function( oError ) {
+                        return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+                    } )
+                    .then( function( oSavedEvent ) {
+                        setEventUserRelation( oEventUser, iUserId, oSavedEvent.id )
+                            .save()
+                                .catch( function( oError ) {
+                                    return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+                                } )
+                                .then( function() {
+                                    oSavedEvent && jsonMiddlewares.send( oRequest, oResponse, {
+                                        "id": oSavedEvent.id,
+                                        "title": oSavedEvent.title,
+                                        "uuid": oSavedEvent.uuid,
+                                        "user_id": oSavedEvent.user_id,
+                                        "description": oSavedEvent.description
+                                    } );
                                 } );
-                            } );
-                } );
-        } );
+                    } );
+            } );
+    }
 };

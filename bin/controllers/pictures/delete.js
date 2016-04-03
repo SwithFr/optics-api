@@ -8,6 +8,7 @@
 var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
     Picture = require( "../../core/sequelize.js" ).models.Picture,
     Event = require( "../../core/sequelize.js" ).models.Event,
+    Validator = require( "../../core/validator.js" ),
     fs = require( "fs" );
 
 var decrementPicturesCount = function( oPictureDestroyed, oRequest, oResponse ) {
@@ -36,25 +37,37 @@ module.exports = function( oRequest, oResponse ) {
 
     var iPictureId = oRequest.params.id;
 
-    Picture
-        .findById( iPictureId )
-        .catch( function( oError ) {
-            return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-        } )
-        .then( function( oPicture ) {
-            if( oPicture ) {
-                if( oPicture.user_id !== +oRequest.headers.userid ) {
-                    return jsonMiddlewares.error( oRequest, oResponse, new Error( "FORBIDDEN_PICTURE" ), 401 );
+    var oIsNotValid = Validator( [
+        {
+            "type": "param",
+            "message": "Id de l'image manquant",
+            "data": iPictureId
+        }
+    ], oRequest, oResponse );
+
+    if ( oIsNotValid ) {
+        return jsonMiddlewares.error( oRequest, oResponse, oIsNotValid, 400 );
+    } else {
+        Picture
+            .findById( iPictureId )
+            .catch( function( oError ) {
+                return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+            } )
+            .then( function( oPicture ) {
+                if( oPicture ) {
+                    if( oPicture.user_id !== +oRequest.headers.userid ) {
+                        return jsonMiddlewares.error( oRequest, oResponse, new Error( "FORBIDDEN_PICTURE" ), 401 );
+                    }
+
+                    fs.unlinkSync( "./static/" + oPicture.title );
+
+                    oPicture
+                        .destroy()
+                        .then( function( oPictureDestroyed ) {
+                            decrementPicturesCount( oPictureDestroyed, oRequest, oResponse );
+                        } );
                 }
-
-                fs.unlinkSync( "./static/" + oPicture.title );
-
-                oPicture
-                    .destroy()
-                    .then( function( oPictureDestroyed ) {
-                        decrementPicturesCount( oPictureDestroyed, oRequest, oResponse );
-                    } );
-            }
-        } );
+            } );
+    }
 
 };

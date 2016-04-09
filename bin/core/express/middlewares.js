@@ -21,15 +21,17 @@ exports.json = _json = {
         //console.log( "OK : [" + ( iStatusCode || 200 ) + "] - ", mData );
         oResponse.status( iStatusCode || 200 ).json( {
             "url": "[" + oRequest.method + "] - " + oRequest.url,
+            "status": iStatusCode || 200,
             "error": false,
             "data": mData
         } );
     },
     "error": function( oRequest, oResponse, oError, iStatusCode ) {
-        console.log( "ERROR : [" + iStatusCode + "] - ", oError );
+        console.log( "•••••••• ERROR : [" + iStatusCode + "] - " + oError );
         oResponse.status( iStatusCode || 500 ).json( {
             "url": "[" + oRequest.method + "] - " + oRequest.url,
-            "error":  ( oError.errors && oError.errors[ 0 ].message ) || oError.message || oError,
+            "status": iStatusCode || 500,
+            "error":  oError || ( oError.errors && oError.errors[ 0 ].message ) || oError.message,
             "data": null
         } );
     }

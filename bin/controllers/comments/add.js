@@ -9,6 +9,7 @@
      fs = require( "fs" ),
      Comment = require( "../../core/sequelize.js" ).models.Comment,
      Picture = require( "../../core/sequelize.js" ).models.Picture,
+     Validator = require( "../../core/validator.js" ),
      zouti = require( "zouti" );
 
  var incrementeCommentsCount = function( iPictureId, oSavedComment, oRequest, oResponse ){
@@ -32,20 +33,33 @@
         } );
  };
 
-var saveComment = function( oComment, oCommentPosted, iPictureId, oRequest, oResponse ){
-    oComment.user_id = +oRequest.headers.userid;
-    oComment.picture_id = iPictureId;
-    oComment.content = oCommentPosted;
-    oComment.event_id = oRequest.headers.eventid;
+var saveComment = function( oComment, oCommentPosted, iPictureId, oRequest, oResponse ) {
+    var oIsNotValid = Validator( [
+        {
+            "type": "header",
+            "message": "Id de l'évènement manquant",
+            "data": oRequest.headers.eventid
+        }
+    ], oRequest, oResponse );
 
-    oComment.save()
-      .catch( function( oError ) {
-          jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
-          return;
-      } )
-      .then( function( oSavedComment ) {
-          incrementeCommentsCount( iPictureId, oSavedComment, oRequest, oResponse );
-      } );
+    if ( oIsNotValid ) {
+        return jsonMiddlewares.error( oRequest, oResponse, oIsNotValid, 400 );
+    } else {
+        oComment.user_id = +oRequest.headers.userid;
+        oComment.event_id = oRequest.headers.eventid;
+        oComment.picture_id = iPictureId;
+        oComment.content = oCommentPosted;
+
+        oComment
+            .save()
+            .catch( function( oError ) {
+                return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
+            } )
+            .then( function( oSavedComment ) {
+                incrementeCommentsCount( iPictureId, oSavedComment, oRequest, oResponse );
+            } );
+    }
+
 };
 
  // [POST] - /comments
@@ -55,19 +69,35 @@ var saveComment = function( oComment, oCommentPosted, iPictureId, oRequest, oRes
          oCommentPosted = oRequest.body.comment,
          iPictureId = +oRequest.headers.pictureid;
 
-     if ( !iPictureId ) {
-         jsonMiddlewares.error( oRequest, oResponse, "INVALID_HEADERS", 400 );
+     var oIsNotValid = Validator( [
+         {
+             "type": "header",
+             "message": "Id de l'image manquant",
+             "data": iPictureId
+         },
+         {
+             "type": "data",
+             "message": "Contenu du commentaire vide",
+             "data": oCommentPosted
+         }
+     ], oRequest, oResponse );
+
+     if ( oIsNotValid ) {
+         return jsonMiddlewares.error( oRequest, oResponse, oIsNotValid, 400 );
+     } else {
+         oComment.content = oCommentPosted;
+
+         oComment
+             .validate()
+             .then( function( oValidationReport ) {
+                 if( oValidationReport ) {
+                     return jsonMiddlewares.error( oRequest, oResponse, {
+                         "type": "VALIDATION_FAILED",
+                         "message": "80 caractères max"
+                     }, 400 );
+                 }
+
+                 saveComment( oComment, oCommentPosted, iPictureId, oRequest, oResponse );
+             } );
      }
-
-     oComment
-         .validate()
-         .then( function( oValidationReport ) {
-             if( oValidationReport ) {
-                 jsonMiddlewares.error( oRequest, oResponse, oValidationReport.errors, 400 );
-                 return;
-             }
-
-             saveComment( oComment, oCommentPosted, iPictureId, oRequest, oResponse );
-
-         } );
  };

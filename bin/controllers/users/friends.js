@@ -12,23 +12,32 @@ var jsonMiddlewares = require( "../../core/express/middlewares.js" ).json,
 // [GET] - /users/friends
 module.exports = function( oRequest, oResponse ) {
 
-    User
-        .findAll( {
+    var sResearch = oRequest.params.friendName || "",
+        oConditions = {
             "include": [ {
                 "model": FriendsRelation,
                 "where": {
                     "friend_id": +oRequest.headers.userid
                 }
             } ]
-        } )
+        } ;
+
+    if ( sResearch ) {
+        oConditions.where = {
+            "login": sResearch
+        };
+    }
+
+    User
+        .findAll( oConditions )
         .catch( function( oError ) {
             return jsonMiddlewares.error( oRequest, oResponse, oError, 500 );
         } )
-        .then( function( oUsers ) {
-            if( !oUsers ) {
+        .then( function( oFriends ) {
+            if( !oFriends ) {
                 return jsonMiddlewares.error( oRequest, oResponse, new Error( "NO_USER_FOUND" ), 404 );
             }
 
-            jsonMiddlewares.send( oRequest, oResponse, oUsers );
+            jsonMiddlewares.send( oRequest, oResponse, oFriends );
         } );
 };

@@ -27,6 +27,9 @@ exports.init = function( oApp ) {
     // Add a friend
     oApp.post( "/users/friends/:id", fCheckConnect, require( "../controllers/users/addFriend.js" ) );
 
+    // Remove a friend
+    oApp.delete( "/users/friends/:id", fCheckConnect, require( "../controllers/users/removeFriend.js" ) );
+
     // update user settings
     oApp.patch( "/users/:id", fCheckConnect, require( "../controllers/users/update.js" ) );
 

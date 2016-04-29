@@ -21,14 +21,16 @@ exports.models = oModels = {
     "Event": oSequelize.import( "../models/events.js" ),
     "EventUser": oSequelize.import( "../models/eventsUsers.js" ),
     "Picture": oSequelize.import( "../models/pictures.js" ),
-    "Comment": oSequelize.import( "../models/comments.js" )
+    "Comment": oSequelize.import( "../models/comments.js" ),
+    "FriendsRelation": oSequelize.import( "../models/friends.js" ),
 };
 
 // relations
 oModels.Event.belongsTo( oModels.User );
+oModels.Event.hasMany( oModels.EventUser );
 oModels.Picture.belongsTo( oModels.Event );
 oModels.Picture.belongsTo( oModels.User );
-oModels.Event.hasMany( oModels.EventUser );
 oModels.Comment.belongsTo( oModels.User );
 oModels.Comment.belongsTo( oModels.Picture );
 oModels.Comment.belongsTo( oModels.Event );
+oModels.User.hasMany( oModels.FriendsRelation );

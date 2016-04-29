@@ -18,6 +18,15 @@ exports.init = function( oApp ) {
     // list all users
     oApp.get( "/users", fCheckConnect, require( "../controllers/users/list.js" ) );
 
+    // List all friends
+    oApp.get( "/users/friends", fCheckConnect, require( "../controllers/users/friends.js" ) );
+
+    // Search a friend
+    oApp.get( "/users/friends/:friendName", fCheckConnect, require( "../controllers/users/friends.js" ) );
+
+    // Add a friend
+    oApp.post( "/users/friends/:id", fCheckConnect, require( "../controllers/users/addFriend.js" ) );
+
     // update user settings
     oApp.patch( "/users/:id", fCheckConnect, require( "../controllers/users/update.js" ) );
 

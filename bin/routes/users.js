@@ -24,6 +24,12 @@ exports.init = function( oApp ) {
     // Search a friend
     oApp.get( "/users/friends/:friendName", fCheckConnect, require( "../controllers/users/friends.js" ) );
 
+    // Add a friend
+    oApp.post( "/users/friends/:id", fCheckConnect, require( "../controllers/users/addFriend.js" ) );
+
+    // Remove a friend
+    oApp.delete( "/users/friends/:id", fCheckConnect, require( "../controllers/users/removeFriend.js" ) );
+
     // update user settings
     oApp.patch( "/users/:id", fCheckConnect, require( "../controllers/users/update.js" ) );
 

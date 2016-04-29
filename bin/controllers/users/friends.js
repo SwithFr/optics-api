@@ -23,6 +23,7 @@ module.exports = function( oRequest, oResponse ) {
         } ;
 
     if ( sResearch ) {
+        oConditions.include = [];
         oConditions.where = {
             "login": sResearch
         };

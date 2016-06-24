@@ -28,6 +28,7 @@ exports.json = _json = {
     },
     "error": function( oRequest, oResponse, oError, iStatusCode ) {
         console.log( "•••••••• ERROR : [" + iStatusCode + "] - " + oError );
+	console.log( oError );
         oResponse.status( iStatusCode || 500 ).json( {
             "url": "[" + oRequest.method + "] - " + oRequest.url,
             "status": iStatusCode || 500,
